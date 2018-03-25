@@ -6,6 +6,16 @@ public class FindResponse {
 
 	private List<DayInfo> daysList;
 
+	private String message;
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
 	public List<DayInfo> getDaysList() {
 		return daysList;
 	}
@@ -16,7 +26,7 @@ public class FindResponse {
 
 	@Override
 	public String toString() {
-		return "FindResponse [daysList=" + daysList + "]";
+		return "FindResponse [daysList=" + daysList + ", message=" + message + "]";
 	}
 
 }

@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -51,6 +52,7 @@ public class ManageBookingController {
 			response.setMessage(e.getMessage());
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
+		logger.info("Sending response {}", response.toString());
 		return ResponseEntity.ok(response);
 	}
 
@@ -60,24 +62,38 @@ public class ManageBookingController {
 		FindResponse response = null;
 		logger.info("Request came for find with start : {} and end : {}", start, end);
 		try {
-			try {
-				if (formatter.parse(start).after(formatter.parse(end))) {
-					logger.error("Start date is greater than end date");
-					throw new GenericException("Start date is greater than end date");
-				}
-				response = manageBookingHelper.findDetails(formatter.parse(start).getTime(),
-						formatter.parse(end).getTime());
-			} catch (ParseException e) {
-				logger.error("Wrong format of date");
-				throw new GenericException("Wrong format of date");
-			}
-		} catch (GenericException e) {
+			validateFindRequest(start, end);
+			response = manageBookingHelper.findDetails(formatter.parse(start).getTime(),
+					formatter.parse(end).getTime());
+		} catch (Exception e) {
+			response = new FindResponse();
+			response.setMessage(e.getMessage());
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
+		response.setMessage("SUCCESS");
+		logger.info("Sending response {}", response.toString());
 		return ResponseEntity.ok(response);
 	}
 
+	private void validateFindRequest(String start, String end) throws GenericException {
+		try {
+			Date startDate = formatter.parse(start);
+			Date endDate = formatter.parse(end);
+			if (startDate.after(endDate)) {
+				logger.error("Start date is greater than end date");
+				throw new GenericException("Start date is greater than end date");
+			}
+		} catch (ParseException e) {
+			logger.error("Wrong format of date");
+			throw new GenericException("Wrong format of date");
+		}
+	}
+
 	private void validateRequest(UpdateRequest updateRequest) throws GenericException {
+		if (RoomType.getRoomType(updateRequest.getRoomType()) == null) {
+			logger.error("Invalid room type");
+			throw new GenericException("Invalid room type");
+		}
 		try {
 			updateRequest.setStart(formatter.parse(updateRequest.getStartDate()).getTime());
 			updateRequest.setEnd(formatter.parse(updateRequest.getEndDate()).getTime());
@@ -98,11 +114,6 @@ public class ManageBookingController {
 			logger.error("Start date is greater than end date");
 			throw new GenericException("Start date is greater than end date");
 		}
-		if (RoomType.getRoomType(updateRequest.getRoomType()) == null) {
-			logger.error("Invalid room type");
-			throw new GenericException("Invalid room type");
-		}
-
 		if (updateRequest.getDays() == null
 				|| (updateRequest.getDays() != null && updateRequest.getDays().size() == 0)) {
 			logger.info("Taking default days as all days");

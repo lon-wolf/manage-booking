@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.booking.common.Days;
+import com.booking.common.GenericException;
 import com.booking.common.PropertiesContext;
 import com.booking.common.RoomType;
 import com.booking.controller.ManageBookingController;
@@ -29,18 +30,6 @@ import com.booking.rest.UpdateRequest;
 public class ManageBookingHelper {
 
 	private static final Logger logger = LogManager.getLogger(ManageBookingHelper.class);
-
-	private static final int SINGLE_PRICE = Integer
-			.parseInt(PropertiesContext.properties.getProperty("single_room_default_price"));
-
-	private static final int SINGLE_INVENTORY = Integer
-			.parseInt(PropertiesContext.properties.getProperty("single_room_default_inventory"));
-
-	private static final int DOUBLE_PRICE = Integer
-			.parseInt(PropertiesContext.properties.getProperty("double_room_default_price"));
-
-	private static final int DOUBLE_INVENTORY = Integer
-			.parseInt(PropertiesContext.properties.getProperty("double_room_default_inventory"));
 
 	private static final long ONE_DAY = 1000 * 60 * 60 * 24;
 
@@ -61,56 +50,37 @@ public class ManageBookingHelper {
 		}
 	}
 
-	public FindResponse findDetails(long start, long end) {
+	public FindResponse findDetails(long start, long end) throws GenericException {
 		int daysBetween = (int) daysBetween(start, end);
 		FindResponse response = new FindResponse();
 		List<DayInfo> daysList = new ArrayList<DayInfo>(daysBetween);
-
 		long tempStart = start;
 		while (daysBetween-- > 0) {
 			DayInfo info = new DayInfo(new Date(tempStart).toString());
 			daysList.add(info);
 			tempStart = tempStart + ONE_DAY;
 		}
+		constructFromPrices(start, end, daysList);
+		constructFromInventory(start, end, daysList);
+		response.setDaysList(daysList);
+		return response;
 
-		for (RoomType type : RoomType.values()) {
-			long priceStart = start;
-			int priceCount = 0;
-			List<Price> prices = priceRepository.findByStartAndEndAndType(start, end, type.getValue());
-			for (Price price : prices) {
-				if (price.getStart() <= priceStart) {
-					while (priceStart <= price.getEnd() && priceStart <= end) {
-						if (type.getValue() == 1)
-							daysList.get(priceCount).getSingleType().setPrice(price.getPrice());
-						else
-							daysList.get(priceCount).getDoubleType().setPrice(price.getPrice());
-						priceCount++;
-						priceStart = priceStart + ONE_DAY;
-					}
-				} else if (price.getStart() > priceStart) {
-					while (priceStart != price.getStart() && priceStart <= end) {
-						priceCount++;
-						priceStart = priceStart + ONE_DAY;
-					}
-					if (price.getStart() <= priceStart) {
-						while (priceStart <= price.getEnd() && priceStart <= end) {
-							if (type.getValue() == 1)
-								daysList.get(priceCount).getSingleType().setPrice(price.getPrice());
-							else
-								daysList.get(priceCount).getDoubleType().setPrice(price.getPrice());
-							priceCount++;
-							priceStart = priceStart + ONE_DAY;
-						}
-					}
-				}
-			}
-		}
+	}
 
+	private void constructFromInventory(long start, long end, List<DayInfo> daysList) throws GenericException {
 		for (RoomType type : RoomType.values()) {
 			long roomStart = start;
+			List<Inventroy> invevtories = null;
 			int roomCount = 0;
-			List<Inventroy> invevtories = inventoryRepository.findByStartAndEndAndType(start, end, type.getValue());
+			try {
+				invevtories = inventoryRepository.findByStartAndEndAndType(start, end, type.getValue());
+				logger.info("Number of invevtories entities {}", invevtories.size());
+			} catch (Exception e) {
+				logger.error("Error while making query for inventory, DB Failure", e);
+				throw new GenericException("Error while making query for inventory, DB Failure");
+			}
 			for (Inventroy inventory : invevtories) {
+				logger.info("Processing inventory {}", inventory.toString());
 				if (inventory.getStart() <= roomStart) {
 					while (roomStart <= inventory.getEnd() && roomStart <= end) {
 						if (type.getValue() == 1)
@@ -138,10 +108,49 @@ public class ManageBookingHelper {
 				}
 			}
 		}
+	}
 
-		response.setDaysList(daysList);
-		return response;
-
+	private void constructFromPrices(long start, long end, List<DayInfo> daysList) throws GenericException {
+		for (RoomType type : RoomType.values()) {
+			long priceStart = start;
+			List<Price> prices = null;
+			int priceCount = 0;
+			try {
+				prices = priceRepository.findByStartAndEndAndType(start, end, type.getValue());
+				logger.info("Number of price entities {}", prices.size());
+			} catch (Exception e) {
+				logger.error("Error while making query for prices, DB Failure", e);
+				throw new GenericException("Error while making query for prices, DB Failure");
+			}
+			for (Price price : prices) {
+				logger.info("Processing price {}", price.toString());
+				if (price.getStart() <= priceStart) {
+					while (priceStart <= price.getEnd() && priceStart <= end) {
+						if (type.getValue() == 1)
+							daysList.get(priceCount).getSingleType().setPrice(price.getPrice());
+						else
+							daysList.get(priceCount).getDoubleType().setPrice(price.getPrice());
+						priceCount++;
+						priceStart = priceStart + ONE_DAY;
+					}
+				} else if (price.getStart() > priceStart) {
+					while (priceStart != price.getStart() && priceStart <= end) {
+						priceCount++;
+						priceStart = priceStart + ONE_DAY;
+					}
+					if (price.getStart() <= priceStart) {
+						while (priceStart <= price.getEnd() && priceStart <= end) {
+							if (type.getValue() == 1)
+								daysList.get(priceCount).getSingleType().setPrice(price.getPrice());
+							else
+								daysList.get(priceCount).getDoubleType().setPrice(price.getPrice());
+							priceCount++;
+							priceStart = priceStart + ONE_DAY;
+						}
+					}
+				}
+			}
+		}
 	}
 
 	private void fetchDates(UpdateRequest updateRequest, boolean price) {
@@ -228,6 +237,8 @@ public class ManageBookingHelper {
 
 	@Transactional
 	private boolean updatePriceInDB(long start, long end, int updatePrice, Integer roomType) {
+		List<Price> toUpdate = new LinkedList<Price>();
+		List<Price> todelete = new LinkedList<Price>();
 		List<Price> prices = priceRepository.findByStartAndEndAndType(start, end, roomType);
 		Price requestPrice = new Price();
 		requestPrice.setStart(start);
@@ -237,20 +248,24 @@ public class ManageBookingHelper {
 		for (Price price : prices) {
 			if (price.getStart() < start) {
 				price.setEnd(start - (ONE_DAY));
-				priceRepository.save(price);
+				toUpdate.add(price);
 			} else if (price.getStart() >= start && price.getEnd() <= end) {
-				priceRepository.delete(price.getId());
+				todelete.add(price);
 			} else {
 				price.setStart(end + (ONE_DAY));
-				priceRepository.save(price);
+				toUpdate.add(price);
 			}
 		}
-		priceRepository.save(requestPrice);
+		toUpdate.add(requestPrice);
+		priceRepository.save(toUpdate);
+		priceRepository.delete(todelete);
 		return true;
 	}
 
 	@Transactional
 	private boolean updateRoomsInDB(Long start, Long end, Integer availabilty, Integer roomType) {
+		List<Inventroy> toUpdate = new LinkedList<Inventroy>();
+		List<Inventroy> todelete = new LinkedList<Inventroy>();
 		List<Inventroy> invevtories = inventoryRepository.findByStartAndEndAndType(start, end, roomType);
 		Inventroy requestInventory = new Inventroy();
 		requestInventory.setStart(start);
@@ -260,15 +275,17 @@ public class ManageBookingHelper {
 		for (Inventroy invevtory : invevtories) {
 			if (invevtory.getStart() < start) {
 				invevtory.setEnd(start - (ONE_DAY));
-				inventoryRepository.save(invevtory);
+				toUpdate.add(invevtory);
 			} else if (invevtory.getStart() >= start && invevtory.getEnd() <= end) {
-				inventoryRepository.delete(invevtory.getId());
+				todelete.add(invevtory);
 			} else {
 				invevtory.setStart(end + (ONE_DAY));
-				inventoryRepository.save(invevtory);
+				toUpdate.add(invevtory);
 			}
 		}
-		inventoryRepository.save(requestInventory);
+		toUpdate.add(requestInventory);
+		inventoryRepository.save(toUpdate);
+		inventoryRepository.delete(todelete);
 		return true;
 	}
 
