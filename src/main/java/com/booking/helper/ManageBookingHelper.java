@@ -39,7 +39,7 @@ public class ManageBookingHelper {
 	@Autowired
 	private InventoryRepository inventoryRepository;
 
-	public void updateDetails(UpdateRequest updateRequest) {
+	public void updateDetails(UpdateRequest updateRequest) throws GenericException {
 		if (updateRequest.getPrice() != null) {
 			logger.info("Updating records with price");
 			fetchDates(updateRequest, true);
@@ -153,7 +153,7 @@ public class ManageBookingHelper {
 		}
 	}
 
-	private void fetchDates(UpdateRequest updateRequest, boolean price) {
+	private void fetchDates(UpdateRequest updateRequest, boolean price) throws GenericException {
 		List<Date> dates = null;
 		boolean allDay = false;
 		boolean weekday = false;
@@ -236,7 +236,7 @@ public class ManageBookingHelper {
 	}
 
 	@Transactional
-	private boolean updatePriceInDB(long start, long end, int updatePrice, Integer roomType) {
+	private boolean updatePriceInDB(long start, long end, int updatePrice, Integer roomType) throws GenericException {
 		List<Price> toUpdate = new LinkedList<Price>();
 		List<Price> todelete = new LinkedList<Price>();
 		List<Price> prices = priceRepository.findByStartAndEndAndType(start, end, roomType);
@@ -257,13 +257,19 @@ public class ManageBookingHelper {
 			}
 		}
 		toUpdate.add(requestPrice);
-		priceRepository.save(toUpdate);
-		priceRepository.delete(todelete);
+		try {
+			priceRepository.save(toUpdate);
+			priceRepository.delete(todelete);
+		} catch (Exception e) {
+			logger.error("Error in updating records in SQL", e);
+			throw new GenericException("Error in updating records in SQL");
+		}
 		return true;
 	}
 
 	@Transactional
-	private boolean updateRoomsInDB(Long start, Long end, Integer availabilty, Integer roomType) {
+	private boolean updateRoomsInDB(Long start, Long end, Integer availabilty, Integer roomType)
+			throws GenericException {
 		List<Inventroy> toUpdate = new LinkedList<Inventroy>();
 		List<Inventroy> todelete = new LinkedList<Inventroy>();
 		List<Inventroy> invevtories = inventoryRepository.findByStartAndEndAndType(start, end, roomType);
@@ -284,8 +290,13 @@ public class ManageBookingHelper {
 			}
 		}
 		toUpdate.add(requestInventory);
-		inventoryRepository.save(toUpdate);
-		inventoryRepository.delete(todelete);
+		try {
+			inventoryRepository.save(toUpdate);
+			inventoryRepository.delete(todelete);
+		} catch (Exception e) {
+			logger.error("Error in updating records in SQL", e);
+			throw new GenericException("Error in updating records in SQL");
+		}
 		return true;
 	}
 

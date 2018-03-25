@@ -9,11 +9,8 @@ import com.booking.config.ApplicationConfig;
 
 import junit.framework.TestCase;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ApplicationConfig.class })
 public class ApplicationConfigTest extends TestCase {
 
-	@Test
 	public void updateTest() {
 
 	}
