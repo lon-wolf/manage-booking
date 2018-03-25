@@ -15,6 +15,7 @@ $ sudo apt-get install oracle-java8-installer
 ```
 
 ## Installations:
+- perform db.sql present in ${dir}/manage-booking/src/main/resources/db.sql
 ```bash
 $ git clone https://github.com/lon-wolf/manage-booking
 $ cd manage-booking
