@@ -13,6 +13,10 @@ import com.booking.db.models.Price;
 @Repository
 public interface PriceRepository extends JpaRepository<Price, Long> {
 
-	@Query("SELECT p FROM price p WHERE p.start <= :end OR p.end >= :start OR p.day IS NOT NULL ORDER BY p.start")
+	@Query("SELECT p FROM price p WHERE (p.start <= :end OR p.end >= :start) AND p.type = :type ORDER BY p.start")
+	List<Price> findByStartAndEndAndType(@Param("start") Date start, @Param("end") Date end,
+			@Param("type") Integer type);
+
+	@Query("SELECT p FROM price p WHERE p.start <= :end OR p.end >= :start ORDER BY p.start")
 	List<Price> findByStartAndEnd(@Param("start") Date start, @Param("end") Date end);
 }

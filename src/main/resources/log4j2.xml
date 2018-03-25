@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+	<Properties>
+		<Property name="LOG_PATTERN">
+			%d{yyyy-MM-dd HH:mm:ss.SSS}{IST} %5p [%15.15t] - %-40.40c{1.} : %m%n
+		</Property>
+	</Properties>
+	<Appenders>
+		<Console name="ConsoleAppender" target="SYSTEM_OUT" follow="true">
+			<PatternLayout pattern="${LOG_PATTERN}" />
+		</Console>
+		<RollingFile name="RollingFileService" fileName="/tmp/booking/logs/service.log"
+			filePattern="/tmp/booking/logs/service-%d{yyyy-MM-dd}-%i.log" immediateFlush="true">
+			<PatternLayout pattern="${LOG_PATTERN}" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+			</Policies>
+			<DefaultRolloverStrategy max="7" />
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Logger name="com.booking" level="debug" additivity="false">
+			<AppenderRef ref="RollingFileService" />
+		</Logger>
+		<Root level="info">
+			<AppenderRef ref="RollingFileService" />
+		</Root>
+	</Loggers>
+</Configuration>

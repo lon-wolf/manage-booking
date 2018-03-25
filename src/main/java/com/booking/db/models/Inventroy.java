@@ -12,8 +12,8 @@ import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Entity(name = "price")
-public class Price {
+@Entity(name = "inventory")
+public class Inventroy {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -26,7 +26,7 @@ public class Price {
 	@Temporal(TemporalType.DATE)
 	private Date end;
 
-	private Integer price;
+	private Integer available;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@JsonProperty("created_at")
@@ -58,12 +58,12 @@ public class Price {
 		this.end = end;
 	}
 
-	public Integer getPrice() {
-		return price;
+	public Integer getAvailable() {
+		return available;
 	}
 
-	public void setPrice(Integer price) {
-		this.price = price;
+	public void setAvailable(Integer available) {
+		this.available = available;
 	}
 
 	public Date getCreatedAt() {
@@ -84,8 +84,8 @@ public class Price {
 
 	@Override
 	public String toString() {
-		return "Price [id=" + id + ", start=" + start + ", end=" + end + ", price=" + price + ", createdAt=" + createdAt
-				+ ", type=" + type + "]";
+		return "Inventroy [id=" + id + ", start=" + start + ", end=" + end + ", available=" + available + ", createdAt="
+				+ createdAt + ", type=" + type + "]";
 	}
 
 }
