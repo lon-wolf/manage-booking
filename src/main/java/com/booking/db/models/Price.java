@@ -20,11 +20,9 @@ public class Price {
 	@Column(name = "id")
 	private Long id;
 
-	@Temporal(TemporalType.DATE)
-	private Date start;
+	private long start;
 
-	@Temporal(TemporalType.DATE)
-	private Date end;
+	private long end;
 
 	private Integer price;
 
@@ -42,19 +40,19 @@ public class Price {
 		this.id = id;
 	}
 
-	public Date getStart() {
+	public long getStart() {
 		return start;
 	}
 
-	public void setStart(Date start) {
+	public void setStart(long start) {
 		this.start = start;
 	}
 
-	public Date getEnd() {
+	public long getEnd() {
 		return end;
 	}
 
-	public void setEnd(Date end) {
+	public void setEnd(long end) {
 		this.end = end;
 	}
 

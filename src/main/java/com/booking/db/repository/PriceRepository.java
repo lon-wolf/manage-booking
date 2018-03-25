@@ -1,6 +1,5 @@
 package com.booking.db.repository;
 
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,10 +12,8 @@ import com.booking.db.models.Price;
 @Repository
 public interface PriceRepository extends JpaRepository<Price, Long> {
 
-	@Query("SELECT p FROM price p WHERE (p.start <= :end OR p.end >= :start) AND p.type = :type ORDER BY p.start")
-	List<Price> findByStartAndEndAndType(@Param("start") Date start, @Param("end") Date end,
+	@Query("SELECT p FROM price p WHERE (p.start < :start AND p.end >= :start) OR (p.start >= :start AND p.start <= :end) AND p.type = :type ORDER BY p.start")
+	List<Price> findByStartAndEndAndType(@Param("start") long start, @Param("end") long end,
 			@Param("type") Integer type);
 
-	@Query("SELECT p FROM price p WHERE p.start <= :end OR p.end >= :start ORDER BY p.start")
-	List<Price> findByStartAndEnd(@Param("start") Date start, @Param("end") Date end);
 }

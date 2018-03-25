@@ -1,6 +1,5 @@
 package com.booking.db.repository;
 
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,11 +12,8 @@ import com.booking.db.models.Inventroy;
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventroy, Long> {
 
-	@Query("SELECT i FROM inventory i WHERE (i.start <= :end OR i.end >= :start) AND i.type = :type ORDER BY i.start")
-	List<Inventroy> findByStartAndEndAndType(@Param("start") Date start, @Param("end") Date end,
+	@Query("SELECT i FROM inventory i WHERE (i.start < :start AND i.end >= :start) OR (i.start >= :start AND i.start <= :end) AND i.type = :type ORDER BY i.start")
+	List<Inventroy> findByStartAndEndAndType(@Param("start") long start, @Param("end") long end,
 			@Param("type") Integer type);
-
-	@Query("SELECT i FROM inventory i WHERE i.start <= :end OR i.end >= :start ORDER BY i.start")
-	List<Inventroy> findByStartAndEnd(@Param("start") Date start, @Param("end") Date end);
 
 }

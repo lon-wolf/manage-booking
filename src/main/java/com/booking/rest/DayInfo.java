@@ -1,5 +1,7 @@
 package com.booking.rest;
 
+import com.booking.common.PropertiesContext;
+
 public class DayInfo {
 
 	private PriceAndRoom singleType;
@@ -7,6 +9,18 @@ public class DayInfo {
 	private PriceAndRoom doubleType;
 
 	private String date;
+
+	public DayInfo(String date) {
+		PriceAndRoom singleT = new PriceAndRoom();
+		PriceAndRoom doubleT = new PriceAndRoom();
+		singleT.setPrice(Integer.parseInt(PropertiesContext.properties.getProperty("single_room_default_price")));
+		singleT.setRooms(Integer.parseInt(PropertiesContext.properties.getProperty("single_room_default_inventory")));
+		doubleT.setPrice(Integer.parseInt(PropertiesContext.properties.getProperty("double_room_default_price")));
+		doubleT.setRooms(Integer.parseInt(PropertiesContext.properties.getProperty("double_room_default_inventory")));
+		this.singleType = singleT;
+		this.doubleType = doubleT;
+		this.date = date;
+	}
 
 	public PriceAndRoom getSingleType() {
 		return singleType;

@@ -65,7 +65,8 @@ public class ManageBookingController {
 					logger.error("Start date is greater than end date");
 					throw new GenericException("Start date is greater than end date");
 				}
-				response = manageBookingHelper.findDetails(formatter.parse(start), formatter.parse(end));
+				response = manageBookingHelper.findDetails(formatter.parse(start).getTime(),
+						formatter.parse(end).getTime());
 			} catch (ParseException e) {
 				logger.error("Wrong format of date");
 				throw new GenericException("Wrong format of date");
@@ -78,8 +79,8 @@ public class ManageBookingController {
 
 	private void validateRequest(UpdateRequest updateRequest) throws GenericException {
 		try {
-			updateRequest.setStart(formatter.parse(updateRequest.getStartDate()));
-			updateRequest.setEnd(formatter.parse(updateRequest.getEndDate()));
+			updateRequest.setStart(formatter.parse(updateRequest.getStartDate()).getTime());
+			updateRequest.setEnd(formatter.parse(updateRequest.getEndDate()).getTime());
 		} catch (ParseException e) {
 			logger.error("Wrong format of date");
 			throw new GenericException("Wrong format of date");
@@ -93,7 +94,7 @@ public class ManageBookingController {
 			logger.error("Invalid value for price and availabilty");
 			throw new GenericException("Invalid value for price and availabilty");
 		}
-		if (updateRequest.getStart().after(updateRequest.getEnd())) {
+		if (updateRequest.getStart() > updateRequest.getEnd()) {
 			logger.error("Start date is greater than end date");
 			throw new GenericException("Start date is greater than end date");
 		}
@@ -109,9 +110,12 @@ public class ManageBookingController {
 			list.add(Days.ALL_DAYS.getValue());
 			updateRequest.setDays(list);
 		}
-		/*
-		 * Invalid days validation
-		 */
+		for (int day : updateRequest.getDays()) {
+			if (Days.getDay(day) == null) {
+				logger.error("Invalid day type");
+				throw new GenericException("Invalid day type");
+			}
+		}
 		Collections.sort(updateRequest.getDays(), Collections.reverseOrder());
 	}
 }

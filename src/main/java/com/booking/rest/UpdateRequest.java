@@ -16,10 +16,10 @@ public class UpdateRequest {
 	private Integer price;
 
 	@JsonIgnore
-	private Date start;
+	private long start;
 
 	@JsonIgnore
-	private Date end;
+	private long end;
 
 	@JsonProperty("start_date")
 	@NotEmpty(message = "Start date cannot be empty or null")
@@ -53,19 +53,19 @@ public class UpdateRequest {
 		this.price = price;
 	}
 
-	public Date getStart() {
+	public long getStart() {
 		return start;
 	}
 
-	public void setStart(Date start) {
+	public void setStart(long start) {
 		this.start = start;
 	}
 
-	public Date getEnd() {
+	public long getEnd() {
 		return end;
 	}
 
-	public void setEnd(Date end) {
+	public void setEnd(long end) {
 		this.end = end;
 	}
 
