@@ -5,6 +5,14 @@
 - Java 1.8
 - Mysql 5.7+
 - Maven
+```bash
+$ sudo apt-get update
+$ sudo apt-get install mysql-server
+$ sudo apt-get install maven
+$ sudo add-apt-repository ppa:webupd8team/java
+$ sudo apt-get update
+$ sudo apt-get install oracle-java8-installer
+```
 
 ## Installations:
 ```bash
