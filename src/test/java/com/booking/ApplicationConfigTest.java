@@ -1,17 +1,34 @@
 package com.booking;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.booking.config.ApplicationConfig;
-
+import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
+/**
+ * Unit test for simple App.
+ */
 public class ApplicationConfigTest extends TestCase {
+	/**
+	 * Create the test case
+	 *
+	 * @param testName
+	 *            name of the test case
+	 */
+	public ApplicationConfigTest(String testName) {
+		super(testName);
+	}
 
-	public void updateTest() {
+	/**
+	 * @return the suite of tests being tested
+	 */
+	public static Test suite() {
+		return new TestSuite(ApplicationConfigTest.class);
+	}
 
+	/**
+	 * Rigourous Test :-)
+	 */
+	public void testApp() {
+		assertTrue(true);
 	}
 }
