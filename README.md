@@ -38,7 +38,7 @@ $ nohup java -cp manage-booking-1.0.0.jar:lib/* com.booking.config.ApplicationCo
   single_room_default_inventory=5
   double_room_default_price=1000
   double_room_default_inventory=5
-```
+  ```
 
 
 ## APIs
