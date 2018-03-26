@@ -40,13 +40,32 @@ public class ManageBookingHelper {
 	private InventoryRepository inventoryRepository;
 
 	public void updateDetails(UpdateRequest updateRequest) throws GenericException {
+		List<Price> toPriceUpdate = new LinkedList<Price>();
+		List<Price> toPricedelete = new LinkedList<Price>();
+		List<Inventroy> toInventryUpdate = new LinkedList<Inventroy>();
+		List<Inventroy> toInventrydelete = new LinkedList<Inventroy>();
 		if (updateRequest.getPrice() != null) {
 			logger.info("Updating records with price");
-			fetchDates(updateRequest, true);
+			fetchDates(updateRequest, true, toPriceUpdate, toPricedelete, toInventryUpdate, toInventrydelete);
 		}
 		if (updateRequest.getAvailabilty() != null) {
 			logger.info("Updating records with availabilty");
-			fetchDates(updateRequest, false);
+			fetchDates(updateRequest, false, toPriceUpdate, toPricedelete, toInventryUpdate, toInventrydelete);
+		}
+		doDBTransaction(toPriceUpdate, toPricedelete, toInventryUpdate, toInventrydelete);
+	}
+
+	@Transactional
+	private void doDBTransaction(List<Price> toPriceUpdate, List<Price> toPricedelete, List<Inventroy> toInventryUpdate,
+			List<Inventroy> toInventrydelete) throws GenericException {
+		try {
+			priceRepository.save(toPriceUpdate);
+			priceRepository.delete(toPricedelete);
+			inventoryRepository.save(toInventryUpdate);
+			inventoryRepository.delete(toInventrydelete);
+		} catch (Exception e) {
+			logger.error("Error updating records in DB", e);
+			throw new GenericException("Error updating records in DB");
 		}
 	}
 
@@ -153,7 +172,9 @@ public class ManageBookingHelper {
 		}
 	}
 
-	private void fetchDates(UpdateRequest updateRequest, boolean price) throws GenericException {
+	private void fetchDates(UpdateRequest updateRequest, boolean price, List<Price> toPriceUpdate,
+			List<Price> toPricedelete, List<Inventroy> toInventryUpdate, List<Inventroy> toInventrydelete)
+			throws GenericException {
 		List<Date> dates = null;
 		boolean allDay = false;
 		boolean weekday = false;
@@ -169,9 +190,10 @@ public class ManageBookingHelper {
 				allDay = true;
 				flag = price
 						? updatePriceInDB(updateRequest.getStart(), updateRequest.getEnd(), updateRequest.getPrice(),
-								updateRequest.getRoomType())
+								updateRequest.getRoomType(), toPriceUpdate, toPricedelete)
 						: updateRoomsInDB(updateRequest.getStart(), updateRequest.getEnd(),
-								updateRequest.getAvailabilty(), updateRequest.getRoomType());
+								updateRequest.getAvailabilty(), updateRequest.getRoomType(), toInventryUpdate,
+								toInventrydelete);
 				break;
 			case WEEKDAYS:
 				if (allDay)
@@ -181,9 +203,10 @@ public class ManageBookingHelper {
 				for (Date date : dates) {
 					flag = price
 							? updatePriceInDB(date.getTime(), new Date(date.getTime() + (ONE_DAY * 5)).getTime(),
-									updateRequest.getPrice(), updateRequest.getRoomType())
+									updateRequest.getPrice(), updateRequest.getRoomType(), toPriceUpdate, toPricedelete)
 							: updateRoomsInDB(date.getTime(), new Date(date.getTime() + (ONE_DAY * 5)).getTime(),
-									updateRequest.getAvailabilty(), updateRequest.getRoomType());
+									updateRequest.getAvailabilty(), updateRequest.getRoomType(), toInventryUpdate,
+									toInventrydelete);
 				}
 				break;
 
@@ -195,9 +218,10 @@ public class ManageBookingHelper {
 				for (Date date : dates) {
 					flag = price
 							? updatePriceInDB(date.getTime(), new Date(date.getTime() + (ONE_DAY)).getTime(),
-									updateRequest.getPrice(), updateRequest.getRoomType())
+									updateRequest.getPrice(), updateRequest.getRoomType(), toPriceUpdate, toPricedelete)
 							: updateRoomsInDB(date.getTime(), new Date(date.getTime() + (ONE_DAY)).getTime(),
-									updateRequest.getAvailabilty(), updateRequest.getRoomType());
+									updateRequest.getAvailabilty(), updateRequest.getRoomType(), toInventryUpdate,
+									toInventrydelete);
 				}
 				break;
 
@@ -212,9 +236,9 @@ public class ManageBookingHelper {
 				for (Date date : dates) {
 					flag = price
 							? updatePriceInDB(date.getTime(), date.getTime(), updateRequest.getPrice(),
-									updateRequest.getRoomType())
+									updateRequest.getRoomType(), toPriceUpdate, toPricedelete)
 							: updateRoomsInDB(date.getTime(), date.getTime(), updateRequest.getAvailabilty(),
-									updateRequest.getRoomType());
+									updateRequest.getRoomType(), toInventryUpdate, toInventrydelete);
 				}
 				break;
 
@@ -226,19 +250,17 @@ public class ManageBookingHelper {
 				for (Date date : dates) {
 					flag = price
 							? updatePriceInDB(date.getTime(), date.getTime(), updateRequest.getPrice(),
-									updateRequest.getRoomType())
+									updateRequest.getRoomType(), toPriceUpdate, toPricedelete)
 							: updateRoomsInDB(date.getTime(), date.getTime(), updateRequest.getAvailabilty(),
-									updateRequest.getRoomType());
+									updateRequest.getRoomType(), toInventryUpdate, toInventrydelete);
 				}
 				break;
 			}
 		}
 	}
 
-	@Transactional
-	private boolean updatePriceInDB(long start, long end, int updatePrice, Integer roomType) throws GenericException {
-		List<Price> toUpdate = new LinkedList<Price>();
-		List<Price> todelete = new LinkedList<Price>();
+	private boolean updatePriceInDB(long start, long end, int updatePrice, Integer roomType, List<Price> toUpdate,
+			List<Price> todelete) {
 		List<Price> prices = priceRepository.findByStartAndEndAndType(start, end, roomType);
 		Price requestPrice = new Price();
 		requestPrice.setStart(start);
@@ -257,21 +279,11 @@ public class ManageBookingHelper {
 			}
 		}
 		toUpdate.add(requestPrice);
-		try {
-			priceRepository.save(toUpdate);
-			priceRepository.delete(todelete);
-		} catch (Exception e) {
-			logger.error("Error in updating records in SQL", e);
-			throw new GenericException("Error in updating records in SQL");
-		}
 		return true;
 	}
 
-	@Transactional
-	private boolean updateRoomsInDB(Long start, Long end, Integer availabilty, Integer roomType)
-			throws GenericException {
-		List<Inventroy> toUpdate = new LinkedList<Inventroy>();
-		List<Inventroy> todelete = new LinkedList<Inventroy>();
+	private boolean updateRoomsInDB(Long start, Long end, Integer availabilty, Integer roomType,
+			List<Inventroy> toUpdate, List<Inventroy> todelete) {
 		List<Inventroy> invevtories = inventoryRepository.findByStartAndEndAndType(start, end, roomType);
 		Inventroy requestInventory = new Inventroy();
 		requestInventory.setStart(start);
@@ -290,13 +302,6 @@ public class ManageBookingHelper {
 			}
 		}
 		toUpdate.add(requestInventory);
-		try {
-			inventoryRepository.save(toUpdate);
-			inventoryRepository.delete(todelete);
-		} catch (Exception e) {
-			logger.error("Error in updating records in SQL", e);
-			throw new GenericException("Error in updating records in SQL");
-		}
 		return true;
 	}
 

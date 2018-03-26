@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.booking.common.Days;
 import com.booking.common.GenericException;
+import com.booking.common.PropertiesContext;
 import com.booking.common.RoomType;
 import com.booking.helper.ManageBookingHelper;
 import com.booking.rest.FindResponse;
@@ -109,6 +110,16 @@ public class ManageBookingController {
 				|| (updateRequest.getAvailabilty() != null && updateRequest.getAvailabilty() < 0)) {
 			logger.error("Invalid value for price and availabilty");
 			throw new GenericException("Invalid value for price and availabilty");
+		}
+		int maxSingle = Integer.parseInt(PropertiesContext.properties.getProperty("single_room_default_inventory"));
+		int maxDouble = Integer.parseInt(PropertiesContext.properties.getProperty("double_room_default_inventory"));
+		if (updateRequest.getRoomType() == 1 && updateRequest.getAvailabilty() > maxSingle) {
+			logger.error("Maximum availabilty is {}", maxSingle);
+			throw new GenericException("Maximum availabilty is " + maxSingle);
+		}
+		if (updateRequest.getRoomType() == 2 && updateRequest.getAvailabilty() > maxDouble) {
+			logger.error("Maximum availabilty is {}", maxDouble);
+			throw new GenericException("Maximum availabilty is " + maxDouble);
 		}
 		if (updateRequest.getStart() > updateRequest.getEnd()) {
 			logger.error("Start date is greater than end date");
