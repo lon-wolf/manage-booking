@@ -86,7 +86,7 @@ public class ManageBookingHelper {
 						if (type.getValue() == 1)
 							daysList.get(roomCount).getSingleType().setRooms(inventory.getAvailable());
 						else
-							daysList.get(roomCount).getDoubleType().setPrice(inventory.getAvailable());
+							daysList.get(roomCount).getDoubleType().setRooms(inventory.getAvailable());
 						roomCount++;
 						roomStart = roomStart + ONE_DAY;
 					}
@@ -100,7 +100,7 @@ public class ManageBookingHelper {
 							if (type.getValue() == 1)
 								daysList.get(roomCount).getSingleType().setRooms(inventory.getAvailable());
 							else
-								daysList.get(roomCount).getDoubleType().setPrice(inventory.getAvailable());
+								daysList.get(roomCount).getDoubleType().setRooms(inventory.getAvailable());
 							roomCount++;
 							roomStart = roomStart + ONE_DAY;
 						}
