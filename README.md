@@ -32,6 +32,14 @@ $ nohup java -cp manage-booking-1.0.0.jar:lib/* com.booking.config.ApplicationCo
    - if 1st March, 2017 to 4th March, 2017 price is 1000
      and second update is make price 2000 from 3rd March, 2017 to 7th March, 2017.
      Then, final will be - price is 1000 from 1st to 2nd and 2000 from 3rd to 7th.
+- Before starting you have to mention default rooms and price in ${dir}/manage-booking/src/main/resources/config.properties.
+  ```
+  single_room_default_price=500
+  single_room_default_inventory=5
+  double_room_default_price=1000
+  double_room_default_inventory=5
+```
+
 
 ## APIs
 
