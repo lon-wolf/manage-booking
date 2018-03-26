@@ -26,6 +26,7 @@ $ nohup java -cp manage-booking-1.0.0.jar:lib/* com.booking.config.ApplicationCo
 
 ## Points / Assumptions:
 - Can view logs at : /tmp/booking/logs/service.log
+- To skip running test cases while mvn build, use 'mvn clean install -DskipTests' instead of 'mvn clean install'
 - For single day update: start_date and end_date should be same in update API below.
 - New updates will overwrite old entries, for example:
    - if 1st March, 2017 to 4th March, 2017 price is 1000
